@@ -4229,6 +4229,7 @@ you forget a command, you can run the command @command{help}
 * parttool::                    Modify partition table entries
 * password::                    Set a clear-text password
 * password_pbkdf2::             Set a hashed password
+* plainmount::                  Open device encrypted in plain mode.
 * play::                        Play a tune
 * probe::                       Retrieve device info
 * rdmsr::                       Read values from model-specific registers
@@ -4505,6 +4506,9 @@ function is supported, as Argon2 is not yet supported.
 
 Also, note that, unlike filesystem UUIDs, UUIDs for encrypted devices must be
 specified without dash separators.
+
+Support for plain encryption mode (plain dm-crypt) is provided via separate
+plainmount command.
 @end deffn
 
 @node cutmem
@@ -5010,6 +5014,49 @@ Define a user named @var{user} with password @var{clear-password}.
 Define a user named @var{user} with password hash @var{hashed-password}.
 Use @command{grub-mkpasswd-pbkdf2} (@pxref{Invoking grub-mkpasswd-pbkdf2})
 to generate password hashes.  @xref{Security}.
+@end deffn
+
+
+@node plainmount
+@subsection plainmount
+
+@deffn Command plainmount device [@option{-h} hash] [@option{-c} cipher] [@option{-o} offset] [@option{-b} disk size] [@option{-s} key size] [@option{-S} sector size] [@option{-p} password] [@option{-d} keyfile] [@option{-O} keyfile offset]
+
+Setup access to encrypted in plain mode device. Password can be specified in
+two ways: as a secret passphrase or as a byte array from keyfile or device
+block with the option @option{-d}. Passphrase can be provided interactively
+from console or with option @option{-p}. Keyfile/device block can be a regular
+file or some partition/disk. The length of the key from keyfile/device block
+is limited by @option{-O} (offset of device first block) and @option{-s} (key
+size) options and cannot be larger than cryptomount limit (currently 128 bytes).
+
+Cipher @option{-c} and keysize @option{-s} options are mandatory. Hash option
+@option{-h} is mandatory if keyfile/disk block is not specified. The keyfile
+parameter @option{-d} has higher priority than option @option{-p}.
+
+Option @option{-S} determines encrypted disk block size and can be 512 (default)
+or 1024, 2048, 4096 bytes. Note: disk sector size in plain mode is set at encryption
+time, attempt to decrypt already created device with diffferent sector size will
+result in error.
+
+Options @option{-o}, @option{-b} and @option{-O} are interpreted as size in
+term of bytes where suffixes 'K', 'M' and 'G' (1024^N) are available.
+
+Options @option{-s} must be specified in bits (for example: -s 256 or -s 512).
+
+The plainmount command can report internal cryptographic errors. If it happens,
+check hash, key size and cipher options - they should match each other.
+Successfully decrypted disks are named as (cryptoX) and have linear numeration
+with other decrypted devices opened by cryptodisk.
+
+Note, all encryption arguments (cipher, hash, key size, disk offset and disk
+sector size) must match those which were used to setup encrypted device. If
+any of them does not match actual argument used during initial encryption,
+plainmount will return garbage data and GRUB will report unknown filesystem
+of opened disk. Note, writing data to such virtual device will result in data
+loss if underlying partition hosted some filesystem. If encrypted disk hosts
+some high level abstraction (like LVM2 or MDRAID) it will be created under
+separate name.
 @end deffn
 
 

@@ -1190,6 +1190,11 @@ module = {
 };
 
 module = {
+  name = plainmount;
+  common = disk/plainmount.c;
+};
+
+module = {
   name = luks2;
   common = disk/luks2.c;
   common = lib/gnulib/base64.c;
