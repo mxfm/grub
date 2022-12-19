@@ -130,7 +130,7 @@ grub_fs_probe (grub_device_t device)
 struct grub_fs_block
 {
   grub_disk_addr_t offset;
-  unsigned long length;
+  grub_disk_addr_t length;
 };
 
 static grub_err_t
@@ -195,7 +195,10 @@ grub_fs_blocklist_open (grub_file_t file, const char *name)
 	  goto fail;
 	}
 
+      unsigned long tmp = blocks[i].length;
+      grub_dprintf ("overflow", "tmp=%lu\n", tmp << GRUB_DISK_SECTOR_BITS);
       file->size += (blocks[i].length << GRUB_DISK_SECTOR_BITS);
+      grub_dprintf ("overflow", "file->size=%llu\n", file->size);
       p++;
     }
 
